@@ -2,6 +2,7 @@ from xmlrpc.server import SimpleXMLRPCServer
 from xmlrpc.server import SimpleXMLRPCRequestHandler
 import pymysql.cursors
 import pandas as pd
+import numpy as np
 
 connection = pymysql.connect(host='localhost',
                              user='test',
@@ -22,6 +23,7 @@ server.register_introspection_functions()
 
 # Function definitions - Consider moving to external library...
 class XMLserver:
+    ''' XML-RPC server for mySQL interaction '''
     def __init__(self):
         pass
 
@@ -32,22 +34,29 @@ class XMLserver:
                 c.execute('DROP TABLE IF EXISTS {}'.format(name))
                 print('Table for {} dropped'.format(name))
 
-            c.execute('CREATE TABLE {} (value real)'.format(name))
+            c.execute('CREATE TABLE {} (value1 real, value2 real, value3 real)'.format(name))
             print('Table for {} created'.format(name))
 
         return 0
 
-    def add_data(self, table, value):
+    def add_data(self, table, value1, value2, value3):
+        ''' Adds data into mySQL table '''
         with connection.cursor() as c:
-            c.execute("INSERT INTO {} (value) VALUES ({})"
-                      .format(table, value))
-
+            c.execute("insert into {} (value1, value2, value3) values ({},{},{})".format(table, value1, value2, value3))
             connection.commit()
         #print("Value {} added".format(value))
 
         return 0
 
+    def generate_test_data(self, n):
+        ''' Generates test data in mySQL table '''
+        for i in range(n):
+            self.add_data("test", np.random.rand(), np.random.rand(), np.random.rand())
+        print("Test data generated!")
+        return 0
+
 def get_dataframe():
+    ''' Returns dataframe as list to client '''
     df = pd.read_sql("select * from test", connection)
     return df.values.tolist()
 
@@ -57,19 +66,8 @@ server.register_function(lambda astr: '_' + astr, '_string')
 server.register_function(get_dataframe, 'get_dataframe')
 
 # Run the server's main loop
-#print("Server started")
+print("Server started")
 server.serve_forever()
-
-
-#df = pd.read_sql("select * from test", connection)
-#print(df)
-#s = XMLserver()
-#print(88)
-#s.add_data("test", 44)
-
-#k = get_dataframe()
-#print(k)
-
 
 
 
