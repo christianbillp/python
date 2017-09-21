@@ -4,12 +4,31 @@ import pymysql.cursors
 import pandas as pd
 import numpy as np
 
-connection = pymysql.connect(host='localhost',
-                             user='test',
-                             password='aabbccdd',
-                             db='test',
+def getconf(filename):
+	'''Creates dictionary from configuration file'''
+	d = {}
+	with open(filename, 'r') as file:
+		for line in file:
+			(key, val) = line.strip('\n').split(',')
+			d[key] = val
+
+	return d
+
+XMLconfig = getconf("xmlserver.conf")
+SQLconfig = getconf("sqlconf.conf")
+
+connection = pymysql.connect(host=SQLconfig['host'],
+                             user=SQLconfig['user'],
+                             password=SQLconfig['password'],
+                             db=SQLconfig['db'],
                              charset='utf8mb4',
                              cursorclass=pymysql.cursors.DictCursor)
+#connection = pymysql.connect(host='localhost',
+#                             user='test',
+#                             password='aabbccdd',
+#                             db='test',
+#                             charset='utf8mb4',
+#                             cursorclass=pymysql.cursors.DictCursor)
 
 # Restrict to a particular path.
 class RequestHandler(SimpleXMLRPCRequestHandler):
@@ -17,13 +36,14 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
 
 
 # Create server
-server = SimpleXMLRPCServer(("deuscortex.com", 4343), requestHandler=RequestHandler)
+server = SimpleXMLRPCServer((XMLconfig['server_address'], int(XMLconfig["server_port"])), requestHandler=RequestHandler)
+#server = SimpleXMLRPCServer(("deuscortex.com", 4343), requestHandler=RequestHandler)
 server.register_introspection_functions()
 
 
 # Function definitions - Consider moving to external library...
 class XMLserver:
-    ''' XML-RPC server for mySQL interaction '''
+    '''XML-RPC server for mySQL interaction'''
     def __init__(self):
         pass
 
