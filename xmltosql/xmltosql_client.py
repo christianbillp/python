@@ -3,7 +3,9 @@ import pandas as pd
 import numpy as np
 
 class XMLserver:
-    ''' Client class for interacting with mySQL database '''
+    ''' Client class for interacting with mySQL database.
+		Parses SQL database output to pandas DataFrame
+	'''
 
     def __init__(self, address):
         ''' Initializer '''
