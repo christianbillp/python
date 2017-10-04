@@ -9,6 +9,7 @@ import numpy as np
 
 class data_analyzer:
     data = {}
+    metadata = {}
     name = ""
     components = 0
 
@@ -18,12 +19,15 @@ class data_analyzer:
         df = pd.read_csv(filepath)
         self.data['raw'] = df
         self.data['no_na'] = self.data['raw'].dropna();
-        self.data['n_removed_na'] = self.data['raw'].shape[0] - self.data['no_na'].shape[0]
+        self.metadata['n_removed_na'] = self.data['raw'].shape[0] - self.data['no_na'].shape[0]
         self.data['numerical'] = self.data['no_na'].select_dtypes(exclude=['object'])#.fillna(value=0, axis=1)
-        self.data['X_std'] = StandardScaler().fit_transform(self.data['numerical'].values)
-        self.data['covariance'] = np.cov(self.data['X_std'].T)
-        self.data['eigenvalues'], self.data['eigenvectors'] = np.linalg.eig(self.data['covariance'])
-        self.data['eigenvalues_variance_explained'] = [(i/self.data['eigenvalues'].sum())*100 for i in sorted(self.data['eigenvalues'], reverse=True)]
+        self.data['object'] = self.data['no_na'].select_dtypes(include=['object'])
+        self.data['numerical_std'] = pd.DataFrame(StandardScaler().fit_transform(
+                self.data['numerical'].values), index=self.data['numerical'].index, 
+                columns=self.data['numerical'].columns)
+        self.metadata['covariance'] = np.cov(self.data['numerical_std'].T)
+        self.metadata['eigenvalues'], self.metadata['eigenvectors'] = np.linalg.eig(self.metadata['covariance'])
+        self.metadata['eigenvalues_variance_explained'] = [(i/self.metadata['eigenvalues'].sum())*100 for i in sorted(self.metadata['eigenvalues'], reverse=True)]
 
     def auto(self):
         print(f"Doing basic analysis for {self.name}")
@@ -48,7 +52,7 @@ class data_analyzer:
         total = 0
         n = 1
 
-        for value in self.data['eigenvalues_variance_explained']:
+        for value in self.metadata['eigenvalues_variance_explained']:
             total = total + value
             #print(f"{value} --- {total}.....{n}") # Ok for debug
 
@@ -60,7 +64,7 @@ class data_analyzer:
     def pca_do(self, components):
         '''Does a PCA'''
         pca = PCA(n_components=components)
-        self.data['PCA'] = pca.fit_transform(self.data['X_std'])
+        self.data['PCA'] = pca.fit_transform(self.data['numerical_std'])
 
         return components
 
@@ -68,10 +72,10 @@ class data_analyzer:
         '''Creates a graph over variance explains as a function of principle components'''
         n_columns = self.data['numerical'].shape[1]
         plt.figure(figsize=(10, 5))
-        plt.bar(range(n_columns), self.data['eigenvalues_variance_explained'], alpha=0.3333, align='center', label='individual explained variance', color = 'g')
+        plt.bar(range(n_columns), self.metadata['eigenvalues_variance_explained'], alpha=0.3333, align='center', label='individual explained variance', color = 'g')
         plt.axhline(y=95, linewidth=1, color='r', linestyle='dashed', label="95%")
         plt.axhline(y=90, linewidth=1, color='r', linestyle='dashed', label="90%")
-        plt.step(range(n_columns), np.cumsum(self.data['eigenvalues_variance_explained']), where='mid',label='cumulative explained variance')
+        plt.step(range(n_columns), np.cumsum(self.metadata['eigenvalues_variance_explained']), where='mid',label='cumulative explained variance')
         plt.ylabel('Explained variance ratio')
         plt.xlabel('Principal components')
         plt.legend(loc='best')
@@ -85,14 +89,14 @@ class data_analyzer:
 
     def graph_covariance_heatmap(self, threshold):
         '''Generates a covariance matrix visualized by a heatmap'''
-        self.data['numerical_correlation'] = self.data['numerical'].corr()
+        self.metadata['numerical_correlation'] = self.data['numerical'].corr()
         plt.subplots(figsize=(15, 12))
         plt.title('Pearson Correlation of Movie Features')
 
         # Mask to remove diagonal and upper half
-        mask = np.zeros_like(self.data['numerical_correlation'], dtype=np.bool)
+        mask = np.zeros_like(self.metadata['numerical_correlation'], dtype=np.bool)
         mask[np.triu_indices_from(mask)] = True
-        ax = sns.heatmap(self.data['numerical_correlation'],vmax=1,square=True,annot=True,mask=mask);
+        ax = sns.heatmap(self.metadata['numerical_correlation'],vmax=1,square=True,annot=True,mask=mask);
 
 
         for cell in ax.texts:
@@ -118,7 +122,15 @@ class data_analyzer:
         df['X_cluster'] = self.data['numerical']['X_cluster']
         sns_plot = sns.pairplot(df, hue='X_cluster', palette='Dark2', diag_kind='kde',size=1.85)
         sns_plot.savefig(f"{self.name}_cluster_pca.png")
-
+    
+    def graph_categorical(self):
+        '''Overview of categorical data'''
+        pass
+        
+    def object_to_onehot(self):
+        self.data['object'][self.data['object'].isnull().any(axis=1)]
+        cols = self.data['object'].columns.values.tolist()
+        self.data['object_onehot'] = pd.concat([pd.get_dummies(self.data['object'], columns=cols, prefix=cols), self.data['object'].drop(cols, 1)], 1)
 
     def status(self):
         print(self.data.keys())
@@ -133,8 +145,10 @@ class data_analyzer:
     </head>
         <body>
         <center><h1>{self.name}</h1></center>
-        This is an auto-generated dataset report
+        This is an auto-generated dataset report!
         <h2>Dataset summary</h2>
+        Generated data keys: {list(self.data.keys())}<br>
+        Generated metadata keys: {list(self.metadata.keys())}<br>
         {self.data['numerical'].describe().to_html()}
             <h2>Covariance heatmap with threshold {0.5}</h2>
             <center><img src="{self.name}_covariance_heatmap.png"></img></center>
@@ -149,8 +163,8 @@ class data_analyzer:
 
 if __name__ == "__main__":
     # Human resources dataset
-    #hr = data_analyzer("hr_data", "data/human-resources-analytics/HR_comma_sep.csv");
-    #hr.auto()
+    hr = data_analyzer("hr_data", "data/human-resources-analytics/HR_comma_sep.csv");
+    hr.auto()
     #hr.base_analysis(percentage_explained=90)
     #hr.generate_graphs(threshold=0.5)
     #hr.cluster_pca(clusters=2)
@@ -158,8 +172,8 @@ if __name__ == "__main__":
     #hr.write()
 
     # IMDB movie dataset
-    movie = data_analyzer("imdb", "data/movie_metadata.csv");
-    movie.auto()
+    #movie = data_analyzer("imdb", "data/movie_metadata.csv");
+    #movie.auto()
     #movie.base_analysis(percentage_explained=90)
     #movie.generate_graphs(threshold=0.5)
     #movie.cluster_pca(clusters=2)
