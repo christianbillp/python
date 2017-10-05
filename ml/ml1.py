@@ -10,12 +10,12 @@ import numpy as np
 class data_analyzer:
     data = {}
     metadata = {}
-    name = ""
-    components = 0
+    metadata['n_graph_cluster_pca'] = 0
+    graphs = ""
 
 
     def __init__(self, name, filepath):
-        self.name = name
+        self.metadata['name'] = name
         df = pd.read_csv(filepath)
         self.data['raw'] = df
         self.data['no_na'] = self.data['raw'].dropna();
@@ -23,24 +23,24 @@ class data_analyzer:
         self.data['numerical'] = self.data['no_na'].select_dtypes(exclude=['object'])#.fillna(value=0, axis=1)
         self.data['object'] = self.data['no_na'].select_dtypes(include=['object'])
         self.data['numerical_std'] = pd.DataFrame(StandardScaler().fit_transform(
-                self.data['numerical'].values), index=self.data['numerical'].index, 
+                self.data['numerical'].values), index=self.data['numerical'].index,
                 columns=self.data['numerical'].columns)
         self.metadata['covariance'] = np.cov(self.data['numerical_std'].T)
         self.metadata['eigenvalues'], self.metadata['eigenvectors'] = np.linalg.eig(self.metadata['covariance'])
         self.metadata['eigenvalues_variance_explained'] = [(i/self.metadata['eigenvalues'].sum())*100 for i in sorted(self.metadata['eigenvalues'], reverse=True)]
 
     def auto(self):
-        print(f"Doing basic analysis for {self.name}")
+        print(f"Doing basic analysis for {self.metadata['name']}")
         self.base_analysis(95)
         print("Creating graphs")
-        #self.generate_graphs(0.5)
+        self.generate_graphs(0.5)
         print("Creating report")
         self.write()
         print("Auto completed")
 
     def base_analysis(self, percentage_explained):
-        ''' Does a basic analysis on the dataset: '''
-        self.components = self.pca_do(self.pre_pca(percentage_explained))
+        ''' Does a basic analysis on the dataset: PCA'''
+        self.metadata['components'] = self.pca_do(self.pre_pca(percentage_explained))
 
     def generate_graphs(self, threshold):
         self.graph_variance_explained()
@@ -80,17 +80,21 @@ class data_analyzer:
         plt.xlabel('Principal components')
         plt.legend(loc='best')
         plt.title('Individual and cumulative variance explained')
-        plt.savefig(f"{self.name}_variance_explained.png")
+        plt.savefig(f"{self.metadata['name']}_variance_explained.png")
+        self.graphs = self.graphs + f'''<h2>Variance explained 90% - 95%</h2><center><img src="{self.metadata['name']}_variance_explained.png"></img></center>'''
 
     def graph_pca_pairs(self):
         '''Plots data from PCA dimensional perspectives'''
         sns_plot = sns.pairplot(pd.DataFrame(self.data['PCA']))
-        sns_plot.savefig(f"{self.name}_pca_pairs.png")
+        sns_plot.savefig(f"{self.metadata['name']}_pca_pairs.png")
+
+        self.graphs = self.graphs + f'''<h2>Pairwise plot of PCA using {self.metadata['components']} principle components</h2><center><img src="{self.metadata['name']}_pca_pairs.png"></img></center>'''
+
 
     def graph_covariance_heatmap(self, threshold):
         '''Generates a covariance matrix visualized by a heatmap'''
         self.metadata['numerical_correlation'] = self.data['numerical'].corr()
-        plt.subplots(figsize=(15, 12))
+        plt.subplots() #figsize=(15, 12)
         plt.title('Pearson Correlation of Movie Features')
 
         # Mask to remove diagonal and upper half
@@ -105,28 +109,38 @@ class data_analyzer:
                                         int(cell.get_position()[1]-0.5)), 1, 1,
                                         fill=False, edgecolor='blue', lw=2))
 
-        ax.get_figure().savefig(f"{self.name}_covariance_heatmap.png")
+        ax.get_figure().savefig(f"{self.metadata['name']}_covariance_heatmap.png")
+        self.graphs = self.graphs + f'''<h2>Covariance heatmap with threshold {0.5}</h2><center><img src="{self.metadata['name']}_covariance_heatmap.png"></img></center>'''
 
     def cluster_pca(self, clusters):
+        self.metadata['clusters'] = clusters
         kmeans = KMeans(n_clusters=clusters)
         self.data['numerical'].is_copy = False
         self.data['numerical']['X_cluster'] = kmeans.fit_predict(self.data['PCA'])
-        self.data['clusters'] = []
+        self.data[f'clustered_{clusters}'] = {}
+
 
         for i in range(clusters):
-            self.data['clusters'].append(self.data['numerical'][self.data['numerical']['X_cluster'] == i])
+            self.data[f'clustered_{clusters}'][i] = (self.data['numerical'][self.data['numerical']['X_cluster'] == i])
 
     def graph_cluster_pca(self, components):
+        print(f"running {self.metadata['n_graph_cluster_pca']}")
+        graphname = f"{self.metadata['name']}_cluster_pca{self.metadata['n_graph_cluster_pca']}.png"
         df = pd.DataFrame(self.data['PCA'])
         df = df[list(range(components))]
         df['X_cluster'] = self.data['numerical']['X_cluster']
         sns_plot = sns.pairplot(df, hue='X_cluster', palette='Dark2', diag_kind='kde',size=1.85)
-        sns_plot.savefig(f"{self.name}_cluster_pca.png")
-    
+        sns_plot.savefig(graphname)
+
+        self.graphs = self.graphs + f'''<h2> K-means clustering with {self.metadata['clusters']} clusters</h2><center><img src="{graphname}"></img></center>'''
+
+        self.metadata['n_graph_cluster_pca'] += 1
+
+
     def graph_categorical(self):
         '''Overview of categorical data'''
         pass
-        
+
     def object_to_onehot(self):
         self.data['object'][self.data['object'].isnull().any(axis=1)]
         cols = self.data['object'].columns.values.tolist()
@@ -137,45 +151,111 @@ class data_analyzer:
 
     def write(self):
         '''Generates full html report for dataset'''
-        with open(f"{self.name}_report.html", 'w') as file:
+        with open(f"{self.metadata['name']}_report.html", 'w') as file:
             file.write(f'''
 <html>
     <head>
-        <title>{self.name}</title>
+        <title>{self.metadata['name']}</title>
     </head>
         <body>
-        <center><h1>{self.name}</h1></center>
+        <center><h1>{self.metadata['name']}</h1></center>
         This is an auto-generated dataset report!
         <h2>Dataset summary</h2>
         Generated data keys: {list(self.data.keys())}<br>
         Generated metadata keys: {list(self.metadata.keys())}<br>
         {self.data['numerical'].describe().to_html()}
-            <h2>Covariance heatmap with threshold {0.5}</h2>
-            <center><img src="{self.name}_covariance_heatmap.png"></img></center>
-            <h2>Variance explained 90% - 95%</h2>
-            <center><img src="{self.name}_variance_explained.png"></img></center>
-            <h2>Pairwise plot of PCA using {self.components} principle components</h2>
-            <center><img src="{self.name}_pca_pairs.png"></img></center>
-            <center><img src="{self.name}_cluster_pca.png"></img></center>
+        {self.graphs}
+
+
         </body>
 </html>
                        ''')
+'''
+
+
+
+'''
 
 if __name__ == "__main__":
+    pass
+    pubg = data_analyzer("pubg", "../../datasets/pubgplayerstats/PUBG_Player_Statistics.csv");
+    pubg.base_analysis(95)
+    #pubg.cluster_pca(2)
+    #pubg.auto()
+
+#%% Investigation
+
+
+def pca_investigate(data, investigations):
+    for i in range(len(data)):
+        print(f"n[{i}]: {data[i].shape[0]}")
+        for column in investigations:
+            print(f"{column} mean: {data[i][column].mean()}")
+
+#pca_investigate(pubg.data['clustered_2'],["solo_Wins", "solo_RoundsPlayed", "solo_WinRatio"])
+#sns.regplot(x=pubg.data['PCA'][0], y=pubg.data['PCA'][2], marker="+")
+#sns.pairplot()
+#pubg.data['numerical'].shape
+#pubg.graph_covariance_heatmap(0.5)
+
+#%% Listing correlations
+def best_correlation(numerical):
+    df = numerical.corr()
+    np.fill_diagonal(df.values, 0)
+    pairs = df.idxmax()
+    pred = []
+    a = []
+    b = []
+    for i in range(pairs.shape[0]):
+        pred.append(df.get_value(pairs.index[i], pairs[i]))
+        a.append(pairs.index[i])
+        b.append(pairs[i])
+
+    pred = pd.DataFrame(pred)
+    pred['a'] = a
+    pred['b'] = b
+
+    return pred
+
+prediction = best_correlation(pubg.data['numerical'])
+
+#df['pairs'].index[150]
+#df['pairs'][150]
+
+
+
+#%%
+
     # Human resources dataset
-    hr = data_analyzer("hr_data", "data/human-resources-analytics/HR_comma_sep.csv");
-    hr.auto()
+    hr = data_analyzer("hr_data", "../../datasets/human-resources-analytics/HR_comma_sep.csv");
+    #hr.auto()
     #hr.base_analysis(percentage_explained=90)
+    #hr.graph_covariance_heatmap(0.5)
+    #hr.graph_variance_explained()
+    #hr.graph_pca_pairs()
     #hr.generate_graphs(threshold=0.5)
     #hr.cluster_pca(clusters=2)
+    #hr.graph_cluster_pca(components=3)
+    #hr.cluster_pca(clusters=3)
+    #hr.graph_cluster_pca(components=3)
+    #hr.cluster_pca(clusters=4)
     #hr.graph_cluster_pca(components=3)
     #hr.write()
 
     # IMDB movie dataset
-    #movie = data_analyzer("imdb", "data/movie_metadata.csv");
+    movie = data_analyzer("imdb", "../../datasets/movie_metadata.csv");
     #movie.auto()
     #movie.base_analysis(percentage_explained=90)
     #movie.generate_graphs(threshold=0.5)
     #movie.cluster_pca(clusters=2)
     #movie.graph_cluster_pca(components=3)
     #movie.write()
+
+        # IMDB movie dataset
+    #house = data_analyzer("house", "../../datasets/housesalesprediction/kc_house_data.csv");
+    #house.auto()
+    #house.base_analysis(percentage_explained=90)
+    #house.generate_graphs(threshold=0.5)
+    #house.cluster_pca(clusters=2)
+    #house.graph_cluster_pca(components=3)
+    #house.write()
