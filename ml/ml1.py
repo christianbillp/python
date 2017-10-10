@@ -228,19 +228,19 @@ prediction = best_correlation(pubg.data['numerical'])
 
     # Human resources dataset
     hr = data_analyzer("hr_data", "../../datasets/human-resources-analytics/HR_comma_sep.csv");
-    #hr.auto()
-    #hr.base_analysis(percentage_explained=90)
-    #hr.graph_covariance_heatmap(0.5)
-    #hr.graph_variance_explained()
-    #hr.graph_pca_pairs()
-    #hr.generate_graphs(threshold=0.5)
-    #hr.cluster_pca(clusters=2)
-    #hr.graph_cluster_pca(components=3)
-    #hr.cluster_pca(clusters=3)
-    #hr.graph_cluster_pca(components=3)
-    #hr.cluster_pca(clusters=4)
-    #hr.graph_cluster_pca(components=3)
-    #hr.write()
+    hr.auto()
+    hr.base_analysis(percentage_explained=90)
+    hr.graph_covariance_heatmap(0.5)
+    hr.graph_variance_explained()
+    hr.graph_pca_pairs()
+    hr.generate_graphs(threshold=0.5)
+    hr.cluster_pca(clusters=2)
+    hr.graph_cluster_pca(components=3)
+    hr.cluster_pca(clusters=3)
+    hr.graph_cluster_pca(components=3)
+    hr.cluster_pca(clusters=4)
+    hr.graph_cluster_pca(components=3)
+    hr.write()
 
     # IMDB movie dataset
     movie = data_analyzer("imdb", "../../datasets/movie_metadata.csv");
