@@ -41,6 +41,15 @@ def get_data(url):
 
     return df
 
+#%% Immigrants taking higher education
+df = get_data('http://api.statbank.dk/v1/data/status50/CSV?lang=en&STATUSVID=110&ALDER=IALT&KOEN=TOT&IETYPE=10%2C20%2C30&Tid=*')
+df
+
+
+#%% Immigrants
+df = get_data('http://api.statbank.dk/v1/data/folk1e/CSV?lang=en&Tid=*&HERKOMST=1%2C25%2C35&K%C3%98N=TOT&OMR%C3%85DE=000&ALDER=IALT')
+df
+
 #%%
 df = get_data("http://api.statbank.dk/v1/data/FOLK1B/CSV?K%C3%98N=TOT&ALDER=IALT&OMR%C3%85DE=000&Tid=*")
 df.head(10)
