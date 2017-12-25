@@ -29,7 +29,9 @@ class Bingo():
     
     def show_cards(self):
         for i, card in enumerate(self.cards):
-            print(f"{i} {card}")
+#            print(f"{i} {card}")
+            print("{} {}".format(i, card))
+            
         
     def next_round(self):
         for i, card in enumerate(self.cards):
@@ -37,7 +39,8 @@ class Bingo():
 #            print(f"Card: {i} has number: {current_number} at index: {index}")
             self.cards[i] = np.delete(card, index)
             if self.cards[i].size == 0:
-                print(f"BINGO for card: {i} @ round: {self.current_index}")
+#                print(f"BINGO for card: {i} @ round: {self.current_index}")
+                print("BINGO for card: {} @ round: {}".format(i, self.current_index))
                 return 1
         self.current_number = self.get_next_number()
 
