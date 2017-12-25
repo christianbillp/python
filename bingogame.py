@@ -1,11 +1,12 @@
-# %%% Project Name - Imports
+# %% Project Name - Imports
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-# %%% Project Name - Section - Subsection
+# %% Project Name - Section - Subsection
 
 class Bingo():
+    '''Assumes 90 number bingo from 1 to 90'''
     numbers = np.array(range(1, 91))
     np.random.shuffle(numbers)
     current_index = -1
@@ -40,15 +41,29 @@ class Bingo():
                 return 1
         self.current_number = self.get_next_number()
 
-#%%%
-mybingo = Bingo()
-mybingo.generate_cards(n=9)
-mybingo.show_cards()
-
 #%%
-for _ in range(10):
-    if mybingo.next_round() == 1:
-        break
-mybingo.show_cards()
+end_round = []
+rounds = 1000
+n_cards = 100
 
+# Complete games
+for round_number, game in enumerate(range(rounds)):
+    mybingo = Bingo()
+    mybingo.generate_cards(n=n_cards)
 
+    # Draw numbers
+    for _ in range(90):
+        if mybingo.next_round() == 1:
+            end_round.append(mybingo.current_index)
+            break
+
+# Save result to file
+pd.Series(end_round).to_csv('bingoresults.csv', index=False)
+
+#%% Data presentation
+import seaborn as sns
+
+ds = pd.read_csv('bingoresults.csv')
+fig = sns.distplot(ds)
+fig.set_title('Bingo - Pladen fuld')
+plt.xlabel('Antal numre')
