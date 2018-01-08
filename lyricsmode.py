@@ -1,22 +1,24 @@
 import pylast
 import PyLyrics
 import time
+import nltk
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
-#==================================================
-# Requires a last.fm username connected to Spotify.
-#==================================================
-
-
-API_KEY = "API_KEY"
-API_SECRET = "API_SECRET"
-username = "USERNAME"
-password_hash = 'PASSWORD_HASH'
+# Information from Last.fm
+API_KEY = "YOUR KEY HERE"
+API_SECRET = "YOUR SECRET HERE"
+username = "YOUR USERNAME HERE"
+password_hash = "YOUR HASH HERE"
 network = pylast.LastFMNetwork(api_key=API_KEY,
                                api_secret=API_SECRET,
                                username=username,
                                password_hash=password_hash)
 
-lastfm_user = network.get_user('LASTFM_USERNAME')
+
+lastfm_user = network.get_user(username)
+
 
 def song_info():
     current = lastfm_user.get_now_playing()
@@ -31,14 +33,15 @@ def song_info():
 
 
 def generate_output(page_title, song_lyrics):
-    f = open('index.html', 'w')
+    f = open('/var/www/html/lyrics/index.html', 'w')
     c = song_lyrics.split('\n')
     lyrics_part1 = '<br>'.join(c[0:len(c)//2])
     lyrics_part2 = '<br>'.join(c[len(c)//2+1:len(c)])
 
+
     message = """<html>
     <head></head>
-    <meta http-equiv="refresh" content="5; URL=http://[[[[URL_TO_YOUR_SITE]]]">
+    <meta http-equiv="refresh" content="5; URL=http://lyrics.0ohm.dk">
     <font face="verdana">
     <body><h1 align="center">{0}</h1>
         <p>
@@ -50,10 +53,21 @@ def generate_output(page_title, song_lyrics):
         </table>
         </p>
     </font>
+    <center>    
+        <img src="ldp.png" />
+    </center>
     </body>
+    <br>
     </html>""".format(page_title, lyrics_part1, lyrics_part2)
     f.write(message)
     f.close()
+
+def create_lpd(song_title, song_lyrics):
+    tokens = nltk.word_tokenize(song_lyrics.lower())
+    text = nltk.Text(tokens)
+    fig = plt.figure(figsize=(8,4))
+    text.dispersion_plot(song_title.lower().split(' '))
+    fig.savefig('ldp.png')
 
 while True:
     try:
@@ -61,6 +75,7 @@ while True:
         print("Looking up: {} - {}".format(song_artist, song_title))
         song_lyrics = PyLyrics.PyLyrics.getLyrics(song_artist, song_title)
         generate_output("{} - {}".format(song_artist, song_title), song_lyrics)
+        create_lpd(song_title, song_lyrics)
         print("Process Successful")
 
     except ValueError:
@@ -69,5 +84,8 @@ while True:
     except AttributeError:
         print("No connection")
         pass
-    time.sleep(2)
+    except pylast.WSError:
+        print("Rejected by pylast")
+        pass
+    time.sleep(10)
 
