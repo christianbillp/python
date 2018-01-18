@@ -5,7 +5,8 @@ class DBthing:
 
     def __init__(self, filename, debug=0):
         self.filename = filename
-        self.c = sqlite3.connect(filename).cursor()
+        self.conn = sqlite3.connect(filename)
+        self.c = self.conn.cursor()
         self.debug = debug
 
     def create_table(self, name, n_columns):
@@ -28,6 +29,7 @@ class DBthing:
         sql_command = f'INSERT INTO {table_name} VALUES ({val})'
         print(sql_command) if self.debug == 1 else 0
         self.c.execute(sql_command)
+        self.conn.commit()
 
     def show_data(self, table_name):
         """Prints out all data from [table_name]"""
