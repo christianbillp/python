@@ -5,6 +5,7 @@ __pycache__/
 .spyproject
 *.jpg
 *.mp3
+*.conf
 
 # C extensions
 *.so
