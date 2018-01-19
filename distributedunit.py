@@ -49,9 +49,10 @@ class DistributedUnit():
         tts = gTTS(text=f'Best prediction: {self.latest_prediction}'.replace('_', ' '), lang='en')
         tts.save("hello.mp3")
         print(f'Best prediction: {self.latest_prediction}')
-#        os.system('mpg123 hello.mp3')
+        os.system('mpg123 hello.mp3')
 
 if __name__ == '__main__':
+    pass
     #%%
     du = DistributedUnit('unit1', '192.168.0.151', 22, 'pi', 'raspberry')
     
