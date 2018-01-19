@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 .spyproject
 *.jpg
+*.mp3
 
 # C extensions
 *.so
