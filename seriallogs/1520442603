@@ -1,0 +1,81 @@
+
+
+U-Boot 2017.01 (Dec 20 2017 - 18:46:39 +0000)
+
+Board: Xilinx Zynq
+DRAM:  ECC disabled 1 GiB
+SF: Detected n25q00 with page size 256 Bytes, erase size 64 KiB, total 128 MiB
+MMC:   Card did not respond to voltage select!
+sdhci@e0100000 - probe failed: -95
+Card did not respond to voltage select!
+
+In:    serial@e0001000
+Out:   serial@e0001000
+Err:   serial@e0001000
+Board: Xilinx Zynq
+Net:   ZYNQ GEM: e000b000, phyaddr ffffffff, interface 
+eth0: ethernet@e000b000
+Hit any key to stop autoboot:  2  1  0 
+Read 0 bytes from volume Scripts to 2080000
+No size specified -> Using max size (1111936)
+## Executing script at 02080000
+Found valid slot A, 3 attempts remaining
+Saving Environment to UBI...
+Writing to redundant UBI... done
+Loading Image
+1212490 bytes read in 164 ms (7.1 MiB/s)
+Uncompressed size: 5980028 = 0x5B3F7C
+  design filename = "design_1_wrapper;UserID=0XFFFFFFFF;Version=2017.2"
+  part number = "7z030fbg484"
+  date = "2017/12/13"
+  time = "15:17:26"
+  bytes in bitstream = 5979916
+zynq_align_dma_buffer: Align buffer at 4000070 to 3ffff80(swap 1)
+4116280 bytes read in 349 ms (11.2 MiB/s)
+15413 bytes read in 118 ms (127 KiB/s)
+SF: Detected n25q00 with page size 256 Bytes, erase size 64 KiB, total 128 MiB
+ Starting image
+## Booting kernel from Legacy Image at 02080000 ...
+   Image Name:   Linux-4.9.0-xilinx
+   Image Type:   ARM Linux Kernel Image (uncompressed)
+   Data Size:    4116216 Bytes = 3.9 MiB
+   Load Address: 00008000
+   Entry Point:  00008000
+   Verifying Checksum ... OK
+## Flattened Device Tree blob at 02000000
+   Booting using the fdt blob at 0x2000000
+   Loading Kernel Image ... OK
+   reserving fdt memory region: addr=2000000 size=4000
+   Using Device Tree in place at 02000000, end 02006fff
+
+Starting kernel ...
+
+spidev spi1.0: buggy DT: spidev listed directly in DT
+INIT: version 2.88 booting
+Attach UBI.
+sd 0:0:0:0: [sda] No Caching mode page found
+sd 0:0:0:0: [sda] Assuming drive cache: write through
+Starting syslogd/klogd: Jan  1 00:00:04 (none) syslog.info syslogd started: BusyBox v1.24.1
+done
+Starting udev
+Starting network switch configuration: bcmsetup-init.sh.
+Starting ifplugd:  eth0
+Jan  1 00:00:05 (none) daemon.err ifplugd(eth0): started: BusyBox v1.24.1 (2017-12-20 17:19:45 UTC)
+Jan  1 00:00:05 (none) daemon.err ifplugd(eth0): upping interface
+Jan  1 00:00:05 (none) daemon.err ifplugd(eth0): using SIOCETHTOOL detection mode
+Jan  1 00:00:05 (none) daemon.err ifplugd(eth0): link is down
+Wed Dec 20 20:48:07 UTC 2017
+INIT: Entering runlevel: 5
+Starting system message bus: dbus.
+Starting OpenBSD Secure Shell server: sshd
+done.
+Starting ntpd: done
+Starting redis-server...
+Starting crond: OK
+Starting nginx: nginx.
+Slot: System A
+DDAUIII applications starting
+
+PIL/plus-ddau3 v1.00-54-g1487b28 ddau3 ttyPS0
+
+ddau3 login: 

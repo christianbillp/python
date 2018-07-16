@@ -30,6 +30,8 @@ data = {'name' : 'nodex',
 
 collection.insert_one(data)
 #%%
+
+
 for item in collection.find({'name':'nodex'}):
     pprint.pprint(item)
 
@@ -48,7 +50,7 @@ print(db.)
 from pymongo import MongoClient
 
 def send_data(data):
-    db = MongoClient('localhost', 27017)['test-db']
+    db = MongoClient('deuscortex.com', 27017)['test-db']
 #    db = client['test-db']
     collection = db['test-collection']
     collection.insert_one(data)
@@ -62,3 +64,47 @@ send_data(data)
 #%%
 df = pd.DataFrame.from_records(collection.find({'name':'nodex'}))
 df
+#%%
+from pymongo import MongoClient
+import pandas as pd
+
+
+def get_df():
+    df = pd.DataFrame([])
+
+    with MongoClient('mongodb://twitter:aabbccdd@deuscortex.com:27017/nlp') as client:
+        data = [entry for entry in client['nlp']['twitter'].find()]
+        
+    for value in ['lang', 'text', 'created_at']:
+        df[value] = [entry[value] for entry in data]
+    
+    df['user_id'] = [entry['user']['id'] for entry in data]
+    df['screen_name'] = [entry['user']['screen_name'] for entry in data]
+    df['hashtags'] = [[hashtag['text'] for hashtag in item] for item in [entry['entities']['hashtags'] for entry in data]];
+
+    return df, data
+
+
+df, data = get_df()
+#%%
+
+with MongoClient('mongodb://twitter:aabbccdd@deuscortex.com:27017/nlp') as client:
+    data = client['nlp']['twitter'].count()
+
+print(data)
+
+#[tag for tag in [entry['entities']['hashtags'] for entry in data]]
+
+
+#data[0].keys()
+
+
+
+
+
+
+
+
+
+
+

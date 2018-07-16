@@ -5,17 +5,22 @@ import nltk
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+#%%
+import configparser
 
+config = configparser.ConfigParser()
+config.read('lastfm.conf')
+
+#%%
 # Information from Last.fm
-API_KEY = "YOUR KEY HERE"
-API_SECRET = "YOUR SECRET HERE"
-username = "YOUR USERNAME HERE"
-password_hash = "YOUR HASH HERE"
+API_KEY = config['conf']['API_KEY']
+API_SECRET = config['conf']['API_KEY']
+username = config['conf']['API_KEY']
+password_hash = config['conf']['API_KEY']
 network = pylast.LastFMNetwork(api_key=API_KEY,
                                api_secret=API_SECRET,
                                username=username,
                                password_hash=password_hash)
-
 
 lastfm_user = network.get_user(username)
 
